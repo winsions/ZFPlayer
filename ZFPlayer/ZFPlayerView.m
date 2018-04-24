@@ -26,7 +26,7 @@
 #import <MediaPlayer/MediaPlayer.h>
 #import "UIView+CustomControlView.h"
 #import "ZFPlayer.h"
-
+#import "ZFPlayerControlView.h"
 #define CellPlayerFatherViewTag  200
 
 //忽略编译器的警告
@@ -320,6 +320,13 @@ typedef NS_ENUM(NSInteger, PanDirection){
  *  播放
  */
 - (void)play {
+    if (self.isAutoPlay) {
+        //通知音乐停止播放
+        if ([self.delegate respondsToSelector:@selector(zf_stopAudioPlay)]) { [self.delegate zf_stopAudioPlay]; }
+    }
+    
+    
+    
     [self.controlView zf_playerPlayBtnState:YES];
     if (self.state == ZFPlayerStatePause) { self.state = ZFPlayerStatePlaying; }
     self.isPauseByUser = NO;
@@ -1500,10 +1507,14 @@ typedef NS_ENUM(NSInteger, PanDirection){
 - (void)zf_controlView:(UIView *)controlView playAction:(UIButton *)sender {
     self.isPauseByUser = !self.isPauseByUser;
     if (self.isPauseByUser) {
+        //不自动隐藏
+        
         [self pause];
         if (self.state == ZFPlayerStatePlaying) { self.state = ZFPlayerStatePause;}
     } else {
+        
         [self play];
+        
         if (self.state == ZFPlayerStatePause) { self.state = ZFPlayerStatePlaying; }
     }
     
@@ -1592,6 +1603,26 @@ typedef NS_ENUM(NSInteger, PanDirection){
         [self.delegate zf_playerDownload:urlStr];
     }
 }
+
+- (void)zf_controlView:(CGFloat)currentSlideValue progressValue:(CGFloat)value {
+    // 视频总时间长度
+    CGFloat total = (CGFloat)self.playerItem.duration.value / self.playerItem.duration.timescale;
+    //计算出拖动的当前秒数
+    CGFloat dragedSeconds = total *currentSlideValue + value ;
+
+    [self.controlView zf_playerPlayBtnState:YES];
+    if (0<dragedSeconds <= total) {
+        [self seekToTime:dragedSeconds completionHandler:^(BOOL finished) {}];
+    }else if(dragedSeconds > total){
+         [self seekToTime:total-1 completionHandler:^(BOOL finished) {}];
+    }else{
+        [self seekToTime:0 completionHandler:^(BOOL finished) {}];
+    }
+    
+    
+    
+}
+
 
 - (void)zf_controlView:(UIView *)controlView progressSliderTap:(CGFloat)value {
     // 视频总时间长度

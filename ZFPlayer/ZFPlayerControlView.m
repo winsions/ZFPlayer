@@ -30,7 +30,7 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored"-Wdeprecated-declarations"
 
-static const CGFloat ZFPlayerAnimationTimeInterval             = 7.0f;
+static const CGFloat ZFPlayerAnimationTimeInterval             = 5.0f;
 static const CGFloat ZFPlayerControlBarAutoFadeOutTimeInterval = 0.35f;
 
 @interface ZFPlayerControlView () <UIGestureRecognizerDelegate>
@@ -383,6 +383,7 @@ static const CGFloat ZFPlayerControlBarAutoFadeOutTimeInterval = 0.35f;
 
 - (void)playBtnClick:(UIButton *)sender {
     sender.selected = !sender.selected;
+    self.playeBtn.selected = !self.playeBtn.selected;
     if ([self.delegate respondsToSelector:@selector(zf_controlView:playAction:)]) {
         [self.delegate zf_controlView:self playAction:sender];
     }
@@ -411,9 +412,13 @@ static const CGFloat ZFPlayerControlBarAutoFadeOutTimeInterval = 0.35f;
 }
 
 - (void)downloadBtnClick:(UIButton *)sender {
-    if ([self.delegate respondsToSelector:@selector(zf_controlView:downloadVideoAction:)]) {
-        [self.delegate zf_controlView:self downloadVideoAction:sender];
-    }
+//    if ([self.delegate respondsToSelector:@selector(zf_controlView:downloadVideoAction:)]) {
+//        [self.delegate zf_controlView:self downloadVideoAction:sender];
+//    }
+        if ([self.delegate respondsToSelector:@selector(zf_controlView:progressValue:)]) {
+            [self.delegate zf_controlView:self.videoSlider.value progressValue:15];
+        }
+    
 }
 
 - (void)resolutionBtnClick:(UIButton *)sender {
@@ -423,9 +428,18 @@ static const CGFloat ZFPlayerControlBarAutoFadeOutTimeInterval = 0.35f;
 }
 
 - (void)centerPlayBtnClick:(UIButton *)sender {
-    if ([self.delegate respondsToSelector:@selector(zf_controlView:cneterPlayAction:)]) {
-        [self.delegate zf_controlView:self cneterPlayAction:sender];
+    sender.selected = !sender.selected;
+    if (!self.isShowing ) {
+        self.playeBtn.alpha = 0;
     }
+    
+    if ([self.delegate respondsToSelector:@selector(zf_controlView:playAction:)]) {
+        [self.delegate zf_controlView:self playAction:sender];
+    }
+    
+//    if ([self.delegate respondsToSelector:@selector(zf_controlView:cneterPlayAction:)]) {
+//        [self.delegate zf_controlView:self cneterPlayAction:sender];
+//    }
 }
 
 - (void)failBtnClick:(UIButton *)sender {
@@ -528,14 +542,19 @@ static const CGFloat ZFPlayerControlBarAutoFadeOutTimeInterval = 0.35f;
 
 #pragma mark - Private Method
 
+
 - (void)showControlView {
     self.showing = YES;
     if (self.lockBtn.isSelected) {
         self.topImageView.alpha    = 0;
         self.bottomImageView.alpha = 0;
+        
+        self.playeBtn.alpha = 0;
     } else {
         self.topImageView.alpha    = 1;
         self.bottomImageView.alpha = 1;
+        self.playeBtn.alpha = 1;
+
     }
     self.backgroundColor           = RGBA(0, 0, 0, 0.3);
     self.lockBtn.alpha             = 1;
@@ -551,6 +570,10 @@ static const CGFloat ZFPlayerControlBarAutoFadeOutTimeInterval = 0.35f;
     self.backgroundColor          = RGBA(0, 0, 0, 0);
     self.topImageView.alpha       = self.playeEnd;
     self.bottomImageView.alpha    = 0;
+    
+    self.playeBtn.alpha = 0;
+
+    
     self.lockBtn.alpha            = 0;
     self.bottomProgressView.alpha = 1;
     // 隐藏resolutionView
@@ -654,6 +677,7 @@ static const CGFloat ZFPlayerControlBarAutoFadeOutTimeInterval = 0.35f;
 - (UIButton *)startBtn {
     if (!_startBtn) {
         _startBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+
         [_startBtn setImage:ZFPlayerImage(@"ZFPlayer_play") forState:UIControlStateNormal];
         [_startBtn setImage:ZFPlayerImage(@"ZFPlayer_pause") forState:UIControlStateSelected];
         [_startBtn addTarget:self action:@selector(playBtnClick:) forControlEvents:UIControlEventTouchUpInside];
@@ -786,6 +810,8 @@ static const CGFloat ZFPlayerControlBarAutoFadeOutTimeInterval = 0.35f;
     if (!_playeBtn) {
         _playeBtn = [UIButton buttonWithType:UIButtonTypeCustom];
         [_playeBtn setImage:ZFPlayerImage(@"ZFPlayer_play_btn") forState:UIControlStateNormal];
+        [_playeBtn setImage:ZFPlayerImage(@"ZFPlayer_pause") forState:UIControlStateSelected];
+
         [_playeBtn addTarget:self action:@selector(centerPlayBtnClick:) forControlEvents:UIControlEventTouchUpInside];
     }
     return _playeBtn;
@@ -879,7 +905,7 @@ static const CGFloat ZFPlayerControlBarAutoFadeOutTimeInterval = 0.35f;
     self.totalTimeLabel.text         = @"00:00";
     self.fastView.hidden             = YES;
     self.repeatBtn.hidden            = YES;
-    self.playeBtn.hidden             = YES;
+//    self.playeBtn.hidden             = YES;
     self.resolutionView.hidden       = YES;
     self.failBtn.hidden              = YES;
     self.backgroundColor             = [UIColor clearColor];
@@ -890,7 +916,7 @@ static const CGFloat ZFPlayerControlBarAutoFadeOutTimeInterval = 0.35f;
     self.lockBtn.hidden              = !self.isFullScreen;
     self.failBtn.hidden              = YES;
     self.placeholderImageView.alpha  = 1;
-    [self hideControlView];
+//    [self hideControlView];
 }
 
 - (void)zf_playerResetControlViewForResolution {
@@ -1145,6 +1171,7 @@ static const CGFloat ZFPlayerControlBarAutoFadeOutTimeInterval = 0.35f;
 /** 播放按钮状态 */
 - (void)zf_playerPlayBtnState:(BOOL)state {
     self.startBtn.selected = state;
+    self.playeBtn.selected = state;
 }
 
 /** 锁定屏幕方向按钮状态 */
